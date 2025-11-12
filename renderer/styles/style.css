@@ -1,0 +1,66 @@
+/* General body */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #121212;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Header with search */
+header {
+  display: flex;
+  padding: 10px;
+  background-color: #1f1f1f;
+  align-items: center;
+}
+
+header input {
+  flex: 1;
+  padding: 8px;
+  border-radius: 5px;
+  border: none;
+  margin-right: 10px;
+  font-size: 1em;
+}
+
+header button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  background-color: #1db954;
+  color: white;
+  cursor: pointer;
+}
+
+/* Navigation buttons */
+nav {
+  display: flex;
+  background-color: #1a1a1a;
+  padding: 5px 10px;
+}
+
+nav button {
+  margin-right: 10px;
+  padding: 6px 10px;
+  background-color: #2a2a2a;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+nav button:hover {
+  background-color: #1db954;
+  color: black;
+}
+
+/* Main browser iframe */
+iframe {
+  flex: 1;
+  border: none;
+  width: 100%;
+}

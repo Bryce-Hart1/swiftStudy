@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Math Tools — Calculus & Discrete Math</title>
+  <link rel="stylesheet" href="../styles/base.css">
+  <style>
+    .container { max-width: 1000px; margin: 24px auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 16px; }
+    .card { background:#fff; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,.08); padding:16px; }
+    .card h2 { margin-top:0; }
+    .row { display:flex; gap:8px; align-items:center; margin:8px 0; }
+    input[type="text"], input[type="number"], select { flex:1; padding:6px 8px; border:1px solid #ddd; border-radius:4px; }
+    button { padding:6px 10px; border-radius:4px; border:none; background:#0a74da; color:#fff; cursor:pointer; }
+    pre.result { background:#f7f7f9; padding:8px; border-radius:4px; white-space:pre-wrap; word-break:break-word; }
+    .small { font-size:0.9rem; color:#555; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="card" id="calculus-card">
+      <h2>Calculus Helper</h2>
+      <div class="small">Enter expression using x (e.g. sin(x), x^3 + 2*x, exp(x))</div>
+
+      <div class="row">
+        <input id="calc-expr" type="text" placeholder="Expression in x (e.g. x^2 + sin(x))">
+        <select id="calc-op">
+          <option value="derivative">Derivative (d/dx)</option>
+          <option value="integral">Indefinite Integral</option>
+          <option value="limit">Limit (x → value)</option>
+          <option value="simplify">Simplify</option>
+        </select>
+      </div>
+
+      <div class="row" id="limit-row" style="display:none;">
+        <input id="limit-point" type="text" placeholder="Point for limit (e.g. 0, pi, Infinity)">
+      </div>
+
+      <div class="row">
+        <button id="calc-run">Compute</button>
+        <button id="calc-clear" style="background:#888;">Clear</button>
+      </div>
+
+      <h3>Result</h3>
+      <pre id="calc-result" class="result">—</pre>
+    </section>
+
+    <section class="card" id="discrete-card">
+      <h2>Discrete Math Helper</h2>
+
+      <div class="row">
+        <input id="n-value" type="number" placeholder="n (e.g. 5)" min="0">
+        <input id="k-value" type="number" placeholder="k (e.g. 3)" min="0">
+      </div>
+      <div class="row">
+        <button id="btn-nCr">nCr (combination)</button>
+        <button id="btn-nPr">nPr (permutation)</button>
+        <button id="btn-factorial">Factorial n!</button>
+      </div>
+
+      <hr>
+
+      <div class="row">
+        <input id="prime-input" type="number" placeholder="Check prime (integer)" min="0">
+        <button id="btn-prime">Is Prime?</button>
+      </div>
+
+      <hr>
+
+      <div class="row">
+        <input id="fib-n" type="number" placeholder="Fibonacci n" min="0">
+        <button id="btn-fib">Compute Fib(n)</button>
+      </div>
+
+      <h3>Result</h3>
+      <pre id="discrete-result" class="result">—</pre>
+    </section>
+  </div>
+
+  <!-- libraries and shared scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/algebrite/1.4.0/algebrite.min.js"></script>
+  <script src="../js/app.js"></script>
+
+  <script>
+    // Calculus UI
+    const exprIn = document.getElementById('calc-expr');
+    const opSelect = document.getElementById('calc-op');
+    const limitRow = document.getElementById('limit-row');
+    const limitPoint = document.getElementById('limit-point');
+    const calcRun = document.getElementById('calc-run');
+    const calcClear = document.getElementById('calc-clear');
+    const calcResult = document.getElementById('calc-result');
+
+    opSelect.addEventListener('change', () => {
+      limitRow.style.display = opSelect.value === 'limit' ? 'flex' : 'none';
+    });
+
+    function safeAlgebriteRun(cmd) {
+      try {
+        const raw = Algebrite.run(cmd);
+        return raw === 'undefined' ? 'undefined' : raw;
+      } catch (e) {
+        return 'Error: ' + (e.message || e);
+      }
+    }
+
+    calcRun.addEventListener('click', () => {
+      const expr = (exprIn.value || '').trim();
+      if (!expr) { calcResult.textContent = 'Enter an expression.'; return; }
+      let out = '—';
+      const op = opSelect.value;
+      if (op === 'derivative') {
+        out = safeAlgebriteRun('d(' + expr + ', x)');
+      } else if (op === 'integral') {
+        out = safeAlgebriteRun('integral(' + expr + ', x)');
+      } else if (op === 'limit') {
+        const pt = (limitPoint.value || '0').trim();
+        // use Algebrite.limit(expression, x, point)
+        out = safeAlgebriteRun('limit(' + expr + ', x, ' + pt + ')');
+      } else if (op === 'simplify') {
+        out = safeAlgebriteRun('simplify(' + expr + ')');
+      }
+      calcResult.textContent = out;
+    });
+
+    calcClear.addEventListener('click', () => {
+      exprIn.value = '';
+      limitPoint.value = '';
+      calcResult.textContent = '—';
+    });
+
+    // Discrete Math UI
+    const nIn = document.getElementById('n-value');
+    const kIn = document.getElementById('k-value');
+    const btnNcr = document.getElementById('btn-nCr');
+    const btnNpr = document.getElementById('btn-nPr');
+    const btnFact = document.getElementById('btn-factorial');
+    const primeIn = document.getElementById('prime-input');
+    const btnPrime = document.getElementById('btn-prime');
+    const fibN = document.getElementById('fib-n');
+    const btnFib = document.getElementById('btn-fib');
+    const discreteResult = document.getElementById('discrete-result');
+
+    function factorialBig(n) {
+      if (n < 0) return NaN;
+      let res = 1n;
+      for (let i = 2n; i <= BigInt(n); i++) res *= i;
+      return res;
+    }
+
+    function nCr(n, k) {
+      if (k < 0 || n < 0 || k > n) return NaN;
+      k = Math.min(k, n - k);
+      let num = 1n, den = 1n;
+      for (let i = 0; i < k; i++) {
+        num *= BigInt(n - i);
+        den *= BigInt(i + 1);
+      }
+      return num / den;
+    }
+
+    function nPr(n, k) {
+      if (k < 0 || n < 0 || k > n) return NaN;
+      let num = 1n;
+      for (let i = 0; i < k; i++) num *= BigInt(n - i);
+      return num;
+    }
+
+    function isPrime(n) {
+      if (n <= 1) return false;
+      if (n <= 3) return true;
+      if (n % 2 === 0) return false;
+      for (let i = 3; i * i <= n; i += 2) if (n % i === 0) return false;
+      return true;
+    }
+
+    function fib(n) {
+      if (n < 0) return null;
+      if (n === 0) return 0n;
+      if (n === 1) return 1n;
+      let a = 0n, b = 1n;
+      for (let i = 2; i <= n; i++){
+        const c = a + b; a = b; b = c;
+        }
+      return b;
+    }
+
+    btnNcr.addEventListener('click', () => {
+      const n = Number(nIn.value); const k = Number(kIn.value);
+      discreteResult.textContent = isNaN(n) || isNaN(k) ? 'Enter n and k.' : String(nCr(n, k));
+    });
+
+    btnNpr.addEventListener('click', () => {
+      const n = Number(nIn.value); const k = Number(kIn.value);
+      discreteResult.textContent = isNaN(n) || isNaN(k) ? 'Enter n and k.' : String(nPr(n, k));
+    });
+
+    btnFact.addEventListener('click', () => {
+      const n = Number(nIn.value);
+      discreteResult.textContent = isNaN(n) ? 'Enter n.' : String(factorialBig(n));
+    });
+
+    btnPrime.addEventListener('click', () => {
+      const n = Number(primeIn.value);
+      discreteResult.textContent = isNaN(n) ? 'Enter an integer.' : (isPrime(n) ? n + ' is prime' : n + ' is composite/not prime');
+    });
+
+    btnFib.addEventListener('click', () => {
+      const n = Number(fibN.value);
+      discreteResult.textContent = isNaN(n) ? 'Enter n.' : String(fib(n));
+    });
+  </script>
+</body>
+</html>
